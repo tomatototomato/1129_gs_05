@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>ChatApp</title>
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<!-- コンテンツ表示画面 -->
+
+<div>
+
+    <div class="nameArea"> 
+        <h3>名前：</h3>
+        <input type="text" id="uname">
+    </div>
+
+    <div>
+        <textarea id="text" cols="30" rows="10"></textarea>
+        <br>
+        <button id="send">送信</button>
+        <button id="clear">履歴消去</button>
+
+    </div>
+    <br>
+    <div id="output" style="overflow:auto; height: 700px;"></div>
+</div>
+<!--/ コンテンツ表示画面 -->
+
+
+
+<!-- JQuery -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<!-- JQuery -->
+
+
+<!--** 以下Firebase **-->
+<script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
+    import { getDatabase, ref, push, set, onChildAdded, remove, onChildRemoved } 
+    from "https://www.gstatic.com/firebasejs/9.1.0/firebase-database.js"; 
+  
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAQ4jPG5AW0HgEGJFwIGo2HiqVE85Z7aMw",
+      authDomain: "chatapp-800f5.firebaseapp.com",
+      databaseURL: "https://chatapp-800f5-default-rtdb.firebaseio.com",
+      projectId: "chatapp-800f5",
+      storageBucket: "chatapp-800f5.firebasestorage.app",
+      messagingSenderId: "1053246004948",
+      appId: "1:1053246004948:web:8322c1e63ae94123fe6541"
+    };
+
+  
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db  = getDatabase(app); //RealtimeDBに接続
+    const dbRef = ref(db,"chat"); //RealtimeDB内の"chat"を使う
+
+//データ登録(Click)
+$("#send").on("click",function() {
+
+    var date = new Date();
+    let nowYear = date.getFullYear();
+    let nowMonth = date.getMonth();
+    let nowDate = date.getDate();
+
+    let nowHour = date.getHours(); // 時間を抜き出す
+    let nowMin  = date.getMinutes(); // 分数を抜き出す
+    let nowSec  = date.getSeconds(); // 秒数を抜き出す
+
+    var str_nowDate = nowYear + "/" + nowMonth + "/" + nowDate + " " + nowHour + ":" + nowMin + ":" + nowSec;
+
+    const msg = {
+        uname: $("#uname").val(),
+        text: $("#text").val(),
+        time: str_nowDate
+    }
+    const newPostRef = push(dbRef); //ユニークKEYを生成
+    set(newPostRef, msg);           //"chat"にユニークKEYをつけてオブジェクトデータを登録
+
+    $("#uname").val("");
+    $("#text").val("")
+});
+
+//データ登録(Enter)
+$("#text").on("keydown",function(e){
+    
+    var date = new Date();
+    let nowYear = date.getFullYear();
+    let nowMonth = date.getMonth();
+    let nowDate = date.getDate();
+
+    let nowHour = date.getHours(); // 時間を抜き出す
+    let nowMin  = date.getMinutes(); // 分数を抜き出す
+    let nowSec  = date.getSeconds(); // 秒数を抜き出す
+
+    var str_nowDate = nowYear + "/" + nowMonth + "/" + nowDate + " " + nowHour + ":" + nowMin + ":" + nowSec;
+
+    console.log(e);        //e変数の中身を確認！！
+    if(e.keyCode == 13){   //EnterKey=13
+        const msg = {
+            uname: $("#uname").val(),
+            text: $("#text").val(),
+            time: str_nowDate
+        }
+        const newPostRef = push(dbRef); //ユニークKEYを生成
+        set(newPostRef, msg);           //"chat"にユニークKEYをつけてオブジェクトデータを登録
+    }
+});
+
+$("#clear").on("click",function() {
+    remove(dbRef);
+    window.location.reload();
+});
+
+//最初にデータ取得＆onSnapshotでリアルタイムにデータを取得
+onChildAdded(dbRef, function(data){   
+    const msg  = data.val();    //オブジェクトデータを取得し、変数msgに代入
+    const key  = data.key;      //データのユニークキー（削除や更新に使用可能）
+    //表示用テキスト・HTMLを作成
+    // let h = '<p>';
+    //     h += msg.time;
+    //     h += '<br>';
+    //     h += msg.uname;
+    //     h += '<br>';
+    //     h += msg.text;
+    //     h += '</p>';
+    //     $("#output").append(h); //#outputの最後に追加
+
+        let h = `
+            <div class="box" id=${key}>
+                <p>投稿日時：${msg.time}</p>
+                <p>投稿者：${msg.uname}</p>
+                <br>
+                <p>メッセージ：${msg.text}</p>
+            </div>
+            `
+
+            $("#output").append(h); //#outputの最後に追加
+});
+
+  </script>
+
+
+
+
+
+
+</body>
+</html>
